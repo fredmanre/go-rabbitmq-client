@@ -20,7 +20,7 @@ type RabbitMQClient struct {
 	Err      chan error
 }
 
-// ################################## Reconneciton config
+// Reconnection config
 type RabbitConnection struct {
 	username            string
 	password            string
