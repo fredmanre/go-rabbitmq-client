@@ -1,4 +1,4 @@
-module go-rabbitmq-client
+module github.com/fredmanre/go-rabbitmq-client
 
 go 1.19
 
