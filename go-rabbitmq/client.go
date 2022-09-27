@@ -30,6 +30,7 @@ type RabbitConnection struct {
 	SetupQueue          RabbitSetupQueue
 }
 
+// Queue config
 type RabbitSetupQueue struct {
 	exchange       string
 	queueName      string
@@ -40,17 +41,16 @@ type RabbitSetupQueue struct {
 
 var RbConn RabbitConnection
 
-// rbp RabbitParameters
+// rabbit params - RabbitParameters
 func (rbp *RabbitConnection) InitMeConn(username, password, host string, port int) {
 	rbp.username, rbp.password, rbp.host = username, password, host
 }
 
+// Rabbit SetUp queue configuration for reconnection
 func (rbp *RabbitConnection) InitMeSetupQueue(exchange, queueName string, autoDelete, isDurable bool, routingKeys []string) {
 	rbp.SetupQueue.exchange, rbp.SetupQueue.queueName = exchange, queueName
 	rbp.SetupQueue.autoDelete, rbp.SetupQueue.queueIsDurable, rbp.SetupQueue.routingKeys = autoDelete, isDurable, routingKeys
 }
-
-// #####################################################################
 
 // RabbitMQClient_GetQueueName return the queue name for a receiver
 func (a *RabbitMQClient) GetQueueName() string {
