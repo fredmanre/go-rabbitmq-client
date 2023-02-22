@@ -39,7 +39,7 @@ type RabbitSetupQueue struct {
 	queueIsDurable bool
 }
 
-var RbConn RabbitConnection
+var RbConn *RabbitConnection
 
 // rabbit params - RabbitParameters
 func (rbp *RabbitConnection) InitMeConn(username, password, host string, port int) {
@@ -68,16 +68,17 @@ func (a *RabbitMQClient) StartConnection(username, password, host string, port i
 	if err != nil {
 		return fmt.Errorf("amqp dial failure: %s", err)
 	}
+	a.Connection = conn
+
 	// we declare a channel to be used for the reconnection process
 	go func() {
 		<-a.Connection.NotifyClose(make(chan *amqp.Error)) // we listen to notify if the connection is closed
 		a.Err <- errors.New("disconnected from rabbitMQ")
 	}()
 
-	a.Connection = conn
 	errCh := a.CreateChannel()
 	if errCh != nil {
-		return fmt.Errorf("couldn't create a channel in start connection err: %s", errCh)
+		return fmt.Errorf("Couldn't create a channel in start connection err: %s", errCh)
 	}
 	return nil
 }
@@ -99,7 +100,7 @@ func (a *RabbitMQClient) Reconnect() error {
 
 	time.Sleep(time.Duration(RbConn.ReconnectionTimeout))
 	fmt.Println("Recconnecting with params ", RbConn)
-	RbConn.ReconnectionTimeout += 10
+	RbConn.ReconnectionTimeout += 5
 	if err := a.StartConnection(RbConn.username, RbConn.password, RbConn.host, RbConn.port); err != nil {
 		return err
 	}
