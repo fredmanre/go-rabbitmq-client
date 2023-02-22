@@ -68,13 +68,13 @@ func (a *RabbitMQClient) StartConnection(username, password, host string, port i
 	if err != nil {
 		return fmt.Errorf("amqp dial failure: %s", err)
 	}
-	a.Connection = conn
 
 	// we declare a channel to be used for the reconnection process
 	go func() {
 		<-a.Connection.NotifyClose(make(chan *amqp.Error)) // we listen to notify if the connection is closed
 		a.Err <- errors.New("disconnected from rabbitMQ")
 	}()
+	a.Connection = conn
 
 	errCh := a.CreateChannel()
 	if errCh != nil {
