@@ -39,7 +39,7 @@ type RabbitSetupQueue struct {
 	queueIsDurable bool
 }
 
-var RbConn *RabbitConnection
+var RbConn RabbitConnection
 
 // rabbit params - RabbitParameters
 func (rbp *RabbitConnection) InitMeConn(username, password, host string, port int) {
