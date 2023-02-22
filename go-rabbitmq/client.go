@@ -2,7 +2,6 @@ package rabbit
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -20,7 +19,7 @@ type RabbitMQClient struct {
 	Err      chan error
 }
 
-// Reconnection config
+// RabbitConnection Reconnection config
 type RabbitConnection struct {
 	username            string
 	password            string
@@ -30,7 +29,7 @@ type RabbitConnection struct {
 	SetupQueue          RabbitSetupQueue
 }
 
-// Queue config
+// RabbitSetupQueue Queue config
 type RabbitSetupQueue struct {
 	exchange       string
 	queueName      string
@@ -41,23 +40,23 @@ type RabbitSetupQueue struct {
 
 var RbConn RabbitConnection
 
-// rabbit params - RabbitParameters
+// InitMeConn rabbit params - RabbitParameters
 func (rbp *RabbitConnection) InitMeConn(username, password, host string, port int) {
 	rbp.username, rbp.password, rbp.host, rbp.port = username, password, host, port
 }
 
-// Rabbit SetUp queue configuration for reconnection
+// InitMeSetupQueue Rabbit SetUp queue configuration for reconnection
 func (rbp *RabbitConnection) InitMeSetupQueue(exchange, queueName string, autoDelete, isDurable bool, routingKeys []string) {
 	rbp.SetupQueue.exchange, rbp.SetupQueue.queueName = exchange, queueName
 	rbp.SetupQueue.autoDelete, rbp.SetupQueue.queueIsDurable, rbp.SetupQueue.routingKeys = autoDelete, isDurable, routingKeys
 }
 
-// RabbitMQClient_GetQueueName return the queue name for a receiver
+// GetQueueName RabbitMQClient_GetQueueName return the queue name for a receiver
 func (a *RabbitMQClient) GetQueueName() string {
 	return a.Reception.Queue.Name
 }
 
-// RabbitMQClient_StartConnection Starts the connection with rabbitMQ server.
+// StartConnection RabbitMQClient_StartConnection Starts the connection with rabbitMQ server.
 // Dials up and creates a channel
 func (a *RabbitMQClient) StartConnection(username, password, host string, port int) error {
 
@@ -69,12 +68,12 @@ func (a *RabbitMQClient) StartConnection(username, password, host string, port i
 		return fmt.Errorf("amqp dial failure: %s", err)
 	}
 
+	a.Connection = conn
 	// we declare a channel to be used for the reconnection process
 	go func() {
-		<-a.Connection.NotifyClose(make(chan *amqp.Error)) // we listen to notify if the connection is closed
-		a.Err <- errors.New("disconnected from rabbitMQ")
+		closeErr := <-a.Connection.NotifyClose(make(chan *amqp.Error)) // we listen to notify if the connection is closed
+		a.Err <- fmt.Errorf("disconnected from rabbitMQ: %s", closeErr)
 	}()
-	a.Connection = conn
 
 	errCh := a.CreateChannel()
 	if errCh != nil {
@@ -83,7 +82,7 @@ func (a *RabbitMQClient) StartConnection(username, password, host string, port i
 	return nil
 }
 
-// RabbitMQClient_CreateChannel creates a channel and saves it in struct
+// CreateChannel RabbitMQClient_CreateChannel creates a channel and saves it in struct
 func (a *RabbitMQClient) CreateChannel() error {
 	ch, err := a.Connection.Channel()
 	if err != nil {
@@ -93,7 +92,7 @@ func (a *RabbitMQClient) CreateChannel() error {
 	return nil
 }
 
-// Manage reconnection to rabbitMQ
+// Reconnect Manage reconnection to rabbitMQ
 // for startConnection: username, password, host & port
 // for SetupQueues: queueName, queueIsDurable, autoDelete, routingKeys, exchange
 func (a *RabbitMQClient) Reconnect() error {
@@ -114,7 +113,7 @@ func (a *RabbitMQClient) Reconnect() error {
 
 }
 
-// RabbitMQClient_SetupQueues Declares and binds a queue to an exchange
+// SetupQueues RabbitMQClient_SetupQueues Declares and binds a queue to an exchange
 func (a *RabbitMQClient) SetupQueues(queueName string, queueIsDurable, autoDelete bool, routingKeys []string, exchange string) error {
 	q, err := a.Channel.QueueDeclare(
 		queueName,      // name
@@ -139,7 +138,7 @@ func (a *RabbitMQClient) SetupQueues(queueName string, queueIsDurable, autoDelet
 	return nil
 }
 
-// RabbitMQClient_StartReceiver Starts a rabbit MQ receiver with the passed configuration, returns a channel
+// StartReceiver RabbitMQClient_StartReceiver Starts a rabbit MQ receiver with the passed configuration, returns a channel
 // that will receive the messages, along with the connection and channel instance
 func (a *RabbitMQClient) StartReceiver(queueName string, isDurable, autoDelete bool, routingKeys []string, exchanges interface{}, consumerTag string) (<-chan amqp.Delivery, error) {
 	switch exchangeData := exchanges.(type) {
@@ -178,7 +177,7 @@ func (a *RabbitMQClient) StartReceiver(queueName string, isDurable, autoDelete b
 	return messages, nil
 }
 
-// RabbitMQClient_SetupDispatcher Declares the exchanges to be used to deliver messages
+// SetupDispatcher RabbitMQClient_SetupDispatcher Declares the exchanges to be used to deliver messages
 func (a *RabbitMQClient) SetupDispatcher(exchange, exchangeType string, isDurable, autoDelete bool) error {
 	if err := a.Channel.ExchangeDeclare(
 		exchange,     // name
@@ -194,7 +193,7 @@ func (a *RabbitMQClient) SetupDispatcher(exchange, exchangeType string, isDurabl
 	return nil
 }
 
-// RabbitMQClient_SendMessage Deliver the message to the specified exchange, if exchange not created this will
+// SendMessage RabbitMQClient_SendMessage Deliver the message to the specified exchange, if exchange not created this will
 // throw an error
 func (a *RabbitMQClient) SendMessage(exchange, routingKey string, message interface{}) error {
 	// non blocking channel - if there is no error will go to default where we do nothing
