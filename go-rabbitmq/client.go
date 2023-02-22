@@ -43,7 +43,7 @@ var RbConn RabbitConnection
 
 // rabbit params - RabbitParameters
 func (rbp *RabbitConnection) InitMeConn(username, password, host string, port int) {
-	rbp.username, rbp.password, rbp.host = username, password, host
+	rbp.username, rbp.password, rbp.host, rbp.port = username, password, host, port
 }
 
 // Rabbit SetUp queue configuration for reconnection
