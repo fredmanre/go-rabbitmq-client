@@ -40,7 +40,7 @@ type RabbitSetupQueue struct {
 
 var RbConn RabbitConnection
 
-// InitMeConn rabbit params - RabbitParameters
+// InitMeConn rabbit connection params - RabbitParameters
 func (rbp *RabbitConnection) InitMeConn(username, password, host string, port int) {
 	rbp.username, rbp.password, rbp.host, rbp.port = username, password, host, port
 }
@@ -69,7 +69,7 @@ func (a *RabbitMQClient) StartConnection(username, password, host string, port i
 	}
 
 	a.Connection = conn
-	// we declare a channel to be used for the reconnection process
+	// Channel to be used for the reconnection process
 	go func() {
 		closeErr := <-a.Connection.NotifyClose(make(chan *amqp.Error)) // we listen to notify if the connection is closed
 		a.Err <- fmt.Errorf("disconnected from rabbitMQ: %s", closeErr)
