@@ -19,7 +19,7 @@ type RabbitMQClient struct {
 	Err      chan error
 }
 
-// RabbitConnection Reconnection config
+// RabbitConnection Reconnection with previous initial config
 type RabbitConnection struct {
 	username            string
 	password            string
@@ -40,7 +40,7 @@ type RabbitSetupQueue struct {
 
 var RbConn RabbitConnection
 
-// InitMeConn rabbit params - RabbitParameters
+// InitMeConn rabbit params to establish a connection - RabbitParameters
 func (rbp *RabbitConnection) InitMeConn(username, password, host string, port int) {
 	rbp.username, rbp.password, rbp.host, rbp.port = username, password, host, port
 }
